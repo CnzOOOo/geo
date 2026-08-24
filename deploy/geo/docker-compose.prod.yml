@@ -33,6 +33,8 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     mem_limit: 128m
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     command: ["sh", "-c", "redis-server --requirepass \"$${REDIS_PASSWORD}\" --maxmemory 64mb --maxmemory-policy allkeys-lru"]
     volumes:
       - redis_data:/data
