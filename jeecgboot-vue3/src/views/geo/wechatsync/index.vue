@@ -8,10 +8,13 @@
         <a-button :loading="updateLoading" @click="updateCli">一键更新</a-button>
         <a-button type="primary" @click="openChromeWebStore">安装浏览器插件</a-button>
         <a-button @click="downloadPlugin">下载插件包</a-button>
-        <a-button :loading="platformLoading" @click="checkPlatformStatus">检查平台登录</a-button>
+        <a-button :loading="platformLoading" @click="checkPlatformStatus">{{ isServerMode ? '本地工作站检查指引' : '检查平台登录' }}</a-button>
       </a-space>
 
       <a-descriptions bordered :column="1" class="mt-4">
+        <a-descriptions-item label="部署模式">
+          <a-tag :color="isServerMode ? 'blue' : 'green'">{{ isServerMode ? '生产服务器模式' : '本地工作站模式' }}</a-tag>
+        </a-descriptions-item>
         <a-descriptions-item label="CLI 已安装">
           <a-tag :color="status.cliInstalled ? 'green' : 'red'">{{ status.cliInstalled ? '是' : '否' }}</a-tag>
         </a-descriptions-item>
@@ -59,8 +62,20 @@
         </ol>
         <a-space wrap>
           <a-button type="primary" @click="openExtensionPage">打开扩展设置</a-button>
-          <a-button :loading="platformLoading" @click="checkPlatformStatus">检查平台登录</a-button>
+          <a-button :loading="platformLoading" @click="checkPlatformStatus">{{ isServerMode ? '查看本地工作站检查指引' : '检查平台登录' }}</a-button>
         </a-space>
+      </a-card>
+
+      <a-card v-if="isServerMode" size="small" title="本地发布工作站" class="mt-4">
+        <p class="mb-2">生产服务器不运行 Wechatsync CLI，真实平台草稿由本地发布工作站执行。</p>
+        <ol class="mb-3">
+          <li>打开 Chrome，确认“文章同步助手”扩展已启用。</li>
+          <li>在扩展设置中开启“同步桥接 / CLI / MCP 连接”。</li>
+          <li>复制扩展 Token，配置到本地 CLI 环境变量 <code>WECHATSYNC_TOKEN</code>。</li>
+          <li>在本机执行：<code>wechatsync platforms --auth</code>，确认目标平台已登录。</li>
+          <li>再通过 GEO 发布任务把文章发布到各平台草稿箱。</li>
+        </ol>
+        <a-button :loading="platformLoading" @click="checkPlatformStatus">查看本地工作站检查指引</a-button>
       </a-card>
 
       <a-card v-if="platformOutput" size="small" title="平台登录状态" class="mt-4">
@@ -106,6 +121,7 @@
 
   const issues = computed(() => status.value.issues || []);
   const platformOutput = computed(() => status.value.platformStatus?.output || '');
+  const isServerMode = computed(() => status.value.deploymentMode === 'server');
   const bridgeConnected = computed(() => {
     return /Chrome Extension 已连接|已连接/.test(platformOutput.value);
   });

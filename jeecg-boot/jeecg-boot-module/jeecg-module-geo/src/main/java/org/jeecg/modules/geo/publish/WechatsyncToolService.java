@@ -47,8 +47,13 @@ public class WechatsyncToolService {
 
         String token = findToken();
         String wsPort = findWsPort();
+        String deploymentMode = deploymentMode();
+        boolean serverMode = "server".equalsIgnoreCase(deploymentMode);
         result.put("tokenConfigured", token != null && !token.isBlank());
         result.put("wsPort", wsPort);
+        result.put("deploymentMode", deploymentMode);
+        result.put("serverReady", true);
+        result.put("workstationRequired", serverMode);
 
         JSONObject notRun = new JSONObject();
         notRun.put("success", false);
@@ -56,20 +61,33 @@ public class WechatsyncToolService {
         result.put("platformStatus", notRun);
 
         JSONArray issues = new JSONArray();
-        if (!cliInstalled) {
-            issues.add("Wechatsync CLI 未安装");
-        }
-        if (token == null || token.isBlank()) {
-            issues.add("尚未在发布渠道配置 wechatsync token");
-        }
-        if (wsPort == null || wsPort.isBlank()) {
-            issues.add("尚未配置 wsPort，将使用默认 9527");
+        if (serverMode) {
+            JSONArray workstationIssues = new JSONArray();
+            workstationIssues.add("生产服务器不运行 Wechatsync CLI，请使用本地发布工作站");
+            result.put("workstationIssues", workstationIssues);
+        } else {
+            if (!cliInstalled) {
+                issues.add("Wechatsync CLI 未安装");
+            }
+            if (token == null || token.isBlank()) {
+                issues.add("尚未在发布渠道配置 wechatsync token");
+            }
+            if (wsPort == null || wsPort.isBlank()) {
+                issues.add("尚未配置 wsPort，将使用默认 9527");
+            }
         }
         result.put("issues", issues);
         return result;
     }
 
     public JSONObject platformStatus() {
+        if ("server".equalsIgnoreCase(deploymentMode())) {
+            JSONObject result = new JSONObject();
+            result.put("success", false);
+            result.put("exitCode", 0);
+            result.put("output", "生产服务器不运行 Wechatsync CLI。\n请在本地发布工作站执行：\n\n  wechatsync platforms --auth\n\n并确认 Chrome 扩展已连接、Token 一致、目标平台已登录。");
+            return result;
+        }
         String cliPath = findCliPath();
         JSONObject versionRun = runCommand(List.of(cliPath, "--version"), Map.of(), 10);
         boolean cliInstalled = versionRun.getBooleanValue("success") && versionRun.getIntValue("exitCode") == 0;
@@ -140,6 +158,11 @@ public class WechatsyncToolService {
 
     private String findCliPath() {
         return WechatsyncCliPathResolver.resolve();
+    }
+
+    private String deploymentMode() {
+        String mode = System.getenv("GEO_WECHATSYNC_DEPLOYMENT_MODE");
+        return (mode == null || mode.isBlank()) ? "local" : mode.trim();
     }
 
     private String findToken() {
