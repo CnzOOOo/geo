@@ -1,3 +1,6 @@
+packages:
+  - '.'
+
 allowBuilds:
   '@logicflow/core': true
   '@scarf/scarf': true
