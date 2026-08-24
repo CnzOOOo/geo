@@ -1,0 +1,28 @@
+## ide
+**/.idea
+*.iml
+rebel.xml
+
+## backend
+**/target
+**/logs
+
+## front
+**/*.lock
+os_del.cmd
+os_del_doc.cmd
+.svn
+derby.log
+.cursor
+.history
+.claude
+
+# GEO deploy local files
+deploy/geo/.env
+deploy/geo/jeecg-system-start-3.9.3.jar
+
+# Local runtime logs and generated config
+backend*.log
+frontend*.log
+/config/
+/jeecg-boot/jeecg-module-system/jeecg-system-start/config/

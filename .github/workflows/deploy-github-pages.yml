@@ -1,0 +1,84 @@
+name: Deploy GEO Frontend and Docs to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'jeecgboot-vue3/**'
+      - 'docs/geo-merchant-search-rank/**'
+      - '.github/workflows/deploy-github-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: jeecgboot-vue3/pnpm-lock.yaml
+
+      - name: Configure production API
+        working-directory: jeecgboot-vue3
+        shell: bash
+        run: |
+          cat >> .env.production <<EOF
+          VITE_GLOB_API_URL=${{ vars.GEO_API_URL }}
+          VITE_GLOB_DOMAIN_URL=${{ vars.GEO_API_URL }}
+          VITE_PUBLIC_PATH=${{ vars.GEO_PUBLIC_PATH || format('/{0}/', github.event.repository.name) }}
+          EOF
+
+      - name: Install frontend dependencies
+        working-directory: jeecgboot-vue3
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: jeecgboot-vue3
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: pnpm build
+
+      - name: Build GEO docs
+        working-directory: jeecgboot-vue3
+        run: node scripts/build-geo-docs.mjs
+
+      - name: Prepare Pages artifact
+        shell: bash
+        run: cp -r jeecgboot-vue3/dist _site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,108 @@
+name: geo
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    mem_limit: 768m
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-geo}
+      MYSQL_USER: ${MYSQL_USER:-geo}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --explicit_defaults_for_timestamp=true
+      - --lower_case_table_names=1
+      - --max_allowed_packet=128M
+      - --innodb-buffer-pool-size=256M
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - geo
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    command: ["sh", "-c", "redis-server --requirepass \"$${REDIS_PASSWORD}\" --maxmemory 64mb --maxmemory-policy allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - geo
+
+  backend:
+    image: ${BACKEND_IMAGE:-jeecg-geo-backend:local}
+    restart: unless-stopped
+    mem_limit: 1g
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_FLYWAY_CLEAN_DISABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-geo}?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME: ${MYSQL_USER:-geo}
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      GEO_AI_APIKEY: ${GEO_AI_APIKEY:-}
+      GEO_AI_BASEURL: ${GEO_AI_BASEURL:-https://api.deepseek.com}
+      GEO_AI_MODEL: ${GEO_AI_MODEL:-deepseek-chat}
+      GEO_SITE_BASEURL: ${GEO_SITE_BASEURL:-}
+      GEO_SITE_SITENAME: ${GEO_SITE_SITENAME:-}
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m -Dfile.encoding=UTF-8"
+      WECHATSYNC_TOKEN: ${WECHATSYNC_TOKEN:-}
+      SYNC_WS_PORT: ${SYNC_WS_PORT:-9527}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-28080}:8080"
+    volumes:
+      - ./config:/jeecg-boot/config
+    networks:
+      - geo
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    profiles: ["proxy"]
+    depends_on:
+      - backend
+    environment:
+      GEO_API_DOMAIN: ${GEO_API_DOMAIN:?GEO_API_DOMAIN is required}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - geo
+
+volumes:
+  mysql_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  geo:
+    name: geo
