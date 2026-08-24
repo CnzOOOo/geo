@@ -44,9 +44,9 @@ jobs:
         shell: bash
         run: |
           cat >> .env.production <<EOF
-          VITE_GLOB_API_URL=${{ vars.GEO_API_URL }}
-          VITE_GLOB_DOMAIN_URL=${{ vars.GEO_API_URL }}
-          VITE_PUBLIC_PATH=${{ vars.GEO_PUBLIC_PATH || format('/{0}/', github.event.repository.name) }}
+          VITE_GLOB_API_URL=${{ vars.GEO_API_URL || 'https://geo.rucode.cn/jeecg-boot' }}
+          VITE_GLOB_DOMAIN_URL=${{ vars.GEO_API_URL || 'https://geo.rucode.cn/jeecg-boot' }}
+          VITE_PUBLIC_PATH=${{ vars.GEO_PUBLIC_PATH || '/' }}
           EOF
 
       - name: Install frontend dependencies
