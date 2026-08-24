@@ -26,3 +26,12 @@ backend*.log
 frontend*.log
 /config/
 /jeecg-boot/jeecg-module-system/jeecg-system-start/config/
+
+# Local GEO development reference docs (not published to GitHub Pages)
+/docs/geo-merchant-search-rank/README.md
+/docs/geo-merchant-search-rank/VIDEO-ANALYSIS.md
+/docs/geo-merchant-search-rank/EXECUTION-30D.md
+/docs/geo-merchant-search-rank/JEEG-BOOT-TASKS.md
+/docs/geo-merchant-search-rank/INTEGRATION-CHECKLIST.md
+/docs/geo-merchant-search-rank/TEST-REPORT-2026-08-19.md
+/docs/geo-merchant-search-rank/TEST-REPORT-2026-08-20.md
