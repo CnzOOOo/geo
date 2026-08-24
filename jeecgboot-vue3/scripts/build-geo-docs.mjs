@@ -12,6 +12,7 @@ const markdownDir = path.join(outputDir, 'markdown');
 const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
 
 const order = [
+  'GEO-MENU-GUIDE.md',
   'README.md',
   'MERCHANT-DATA-CHECKLIST.md',
   'DEPLOYMENT-GUIDE.md',
@@ -68,102 +69,104 @@ fs.mkdirSync(markdownDir, { recursive: true });
 
 const style = `
   :root {
-    --bg: #f6f8fa;
-    --panel: #ffffff;
-    --text: #1f2328;
-    --muted: #57606a;
-    --border: #d8dee4;
-    --accent: #0969da;
+    color-scheme: light;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: #172033;
+    background: #f7f9fc;
+    font-synthesis: none;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    color: var(--text);
-    background: var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-    line-height: 1.7;
-  }
-  .layout { display: flex; min-height: 100vh; }
-  .sidebar {
-    width: 280px;
-    flex: 0 0 280px;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    padding: 24px 16px;
+  html { scroll-behavior: smooth; }
+  body { margin: 0; min-width: 320px; background: #f7f9fc; line-height: 1.7; }
+  a { color: #1255a6; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+
+  .topbar {
     position: sticky;
     top: 0;
-    height: 100vh;
-    overflow-y: auto;
+    z-index: 30;
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid #dce3ec;
+    background: rgba(255, 255, 255, .96);
+    padding: .65rem clamp(1rem, 3vw, 2.5rem);
+    backdrop-filter: blur(10px);
   }
-  .brand { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
-  .brand small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
-  nav { display: grid; gap: 4px; }
-  nav a {
-    display: block;
-    padding: 8px 10px;
-    border-radius: 6px;
-    color: var(--text);
-    text-decoration: none;
-    font-size: 14px;
-  }
-  nav a:hover { background: #f0f3f6; }
-  nav a.active { background: #ddf4ff; color: var(--accent); font-weight: 600; }
-  .content {
-    flex: 1;
-    min-width: 0;
-    padding: 40px;
-  }
-  .article {
-    max-width: 960px;
+  .brand { display: inline-flex; align-items: center; gap: .65rem; color: #172033; font-weight: 750; text-decoration: none; }
+  .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 7px; background: #1659b7; color: #fff; font-size: .85rem; }
+  .top-actions { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+  .api-link { font-size: .82rem; font-weight: 650; }
+
+  .docs-shell {
+    display: grid;
+    grid-template-columns: minmax(180px, 230px) minmax(0, 900px);
+    gap: clamp(1.25rem, 3vw, 3rem);
+    width: min(1200px, 100%);
     margin: 0 auto;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 32px 40px;
+    padding: 2rem clamp(1rem, 3vw, 2.5rem) 5rem;
   }
-  .article h1 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-  .article h2 { margin-top: 28px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-  .article table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-  .article th, .article td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; font-size: 14px; }
-  .article th { background: #f0f3f6; }
-  .article pre { background: #f6f8fa; border: 1px solid var(--border); border-radius: 6px; padding: 14px; overflow-x: auto; }
-  .article code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.9em; }
-  .article img { max-width: 100%; }
-  .index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; }
-  .doc-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
+  .task-nav {
+    position: sticky;
+    top: 82px;
+    align-self: start;
+    max-height: calc(100vh - 100px);
+    overflow: auto;
+    display: grid;
+    gap: .18rem;
+  }
+  .task-nav a {
+    border-left: 2px solid transparent;
+    color: #5d6878;
+    padding: .42rem .55rem;
+    font-size: .82rem;
     text-decoration: none;
-    color: var(--text);
   }
-  .doc-card:hover { border-color: var(--accent); }
-  .doc-card h2 { margin: 0 0 8px; font-size: 17px; }
-  .doc-card p { color: var(--muted); margin: 0; font-size: 14px; }
+  .task-nav a:hover { border-left-color: #1c75bc; background: #edf5fb; color: #164f84; }
+  .task-nav a.active { border-left-color: #1659b7; background: #eaf2fb; color: #1255a6; font-weight: 700; }
+
+  main { min-width: 0; }
+  .doc { max-width: 900px; }
+  .doc h1 { margin: 0 0 1.2rem; color: #111827; font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.15; }
+  .doc h2 { margin: 2rem 0 .8rem; color: #142033; font-size: 1.45rem; scroll-margin-top: 82px; }
+  .doc p, .doc li { color: #4e596b; line-height: 1.72; }
+  .doc li + li { margin-top: .35rem; }
+  .doc section { padding: 2.35rem 0; border-bottom: 1px solid #dce3ec; }
+  .doc code { border-radius: 4px; background: #edf1f6; padding: .1rem .3rem; color: #9b2f4a; font-family: "Cascadia Code", Consolas, monospace; font-size: .88em; }
+  .doc pre { margin: 1rem 0; overflow: auto; border-radius: 7px; background: #101827; padding: 1rem; color: #d9e4f2; font-size: .78rem; line-height: 1.65; }
+  .doc pre code { padding: 0; background: transparent; color: inherit; }
+  .doc table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .doc th, .doc td { border-bottom: 1px solid #dce3ec; padding: .7rem .55rem; text-align: left; vertical-align: top; }
+  .doc th { color: #253147; background: #eef2f7; }
+  .doc td { color: #566173; }
+  .doc blockquote { margin: 1rem 0; border-left: 3px solid #0b7d74; background: #eaf7f5; padding: .9rem 1rem; color: #3e5f5b; }
+  .doc img { max-width: 100%; }
+
   @media (max-width: 860px) {
-    .layout { display: block; }
-    .sidebar { width: 100%; height: auto; position: static; border-right: 0; border-bottom: 1px solid var(--border); }
-    .content { padding: 16px; }
-    .article { padding: 20px; }
+    .docs-shell { display: block; padding: 1.3rem 1rem 4rem; }
+    .task-nav { position: static; max-height: none; border-bottom: 1px solid #dce3ec; padding-bottom: 1rem; margin-bottom: 1rem; }
+    .doc h1 { font-size: 2rem; }
+    .doc table { display: block; overflow-x: auto; white-space: nowrap; }
+  }
+
+  @media print {
+    .topbar, .task-nav { display: none !important; }
+    .docs-shell { display: block; padding: 0; }
+    body { background: #fff; }
   }
 `;
 
 function page(title, activeSlug, content, index = false) {
+  const guide = items.find((item) => item.slug === 'GEO-MENU-GUIDE');
+  const indexContent = index && guide ? guide.html : content;
   const nav = items
     .map((item) => {
       const active = activeSlug === item.slug ? ' class="active"' : '';
       return `<a${active} href="./${item.slug}.html">${escapeHtml(item.title)}</a>`;
     })
     .join('\n');
-  const main = index
-    ? `<main class="content"><div class="article"><h1>GEO 使用文档</h1><p>JeecgBoot GEO 运营系统的使用、数据清单、部署和测试说明。</p><div class="index-grid">${items
-        .map(
-          (item) =>
-            `<a class="doc-card" href="./${item.slug}.html"><h2>${escapeHtml(item.title)}</h2><p>${escapeHtml(item.description || '点击阅读')}</p></a>`
-        )
-        .join('')}</div></div></main>`
-    : `<main class="content"><div class="article">${content}</div></main>`;
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -174,12 +177,23 @@ function page(title, activeSlug, content, index = false) {
   <style>${style}</style>
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="brand">GEO 使用文档<small>JeecgBoot GEO 运营系统</small></div>
-      <nav>${nav}</nav>
+  <header class="topbar">
+    <a class="brand" href="./index.html">
+      <span class="brand-mark" aria-hidden="true">G</span>
+      <span>GEO 文档</span>
+    </a>
+    <div class="top-actions">
+      <a class="api-link" href="https://geo.rucode.cn/jeecg-boot">GEO 后台</a>
+      <a class="api-link" href="https://front.rucode.cn/">front.rucode.cn</a>
+    </div>
+  </header>
+  <div class="docs-shell">
+    <aside class="task-nav" aria-label="Documentation navigation">
+      ${nav}
     </aside>
-    ${main}
+    <main id="docs-main" tabindex="-1">
+      <article class="doc">${indexContent}</article>
+    </main>
   </div>
 </body>
 </html>`;
@@ -190,7 +204,7 @@ for (const item of items) {
   fs.copyFileSync(path.join(sourceDir, item.file), path.join(markdownDir, item.file));
 }
 
-fs.writeFileSync(path.join(outputDir, 'index.html'), page('文档首页', '', '', true));
+fs.writeFileSync(path.join(outputDir, 'index.html'), page('GEO 菜单使用说明', 'GEO-MENU-GUIDE', '', true));
 
 const appIndex = path.join(process.cwd(), 'dist', 'index.html');
 if (fs.existsSync(appIndex)) {
