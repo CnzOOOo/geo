@@ -1,6 +1,6 @@
 import { BasicColumn } from '/@/components/Table';
 import { FormSchema } from '/@/components/Table';
-import { getMerchantList } from '../merchant/merchant.api';
+import { merchantSelectProps } from '../merchant/merchantSelect';
 import { getQuestionList } from '../questionBank/questionBank.api';
 
 export const columns: BasicColumn[] = [
@@ -14,8 +14,35 @@ export const columns: BasicColumn[] = [
 
 export const searchFormSchema: FormSchema[] = [
   { label: '标题', field: 'title', component: 'Input', colProps: { span: 8 } },
-  { label: '标题类型', field: 'titleType', component: 'Input', colProps: { span: 8 } },
-  { label: '状态', field: 'status', component: 'InputNumber', colProps: { span: 8 } },
+  {
+    label: '标题类型',
+    field: 'titleType',
+    component: 'Select',
+    colProps: { span: 8 },
+    componentProps: {
+      allowClear: true,
+      options: [
+        { label: '问答式', value: 'QUESTION' },
+        { label: '对比式', value: 'COMPARE' },
+        { label: '避坑式', value: 'AVOID' },
+      ],
+    },
+  },
+  {
+    label: '状态',
+    field: 'status',
+    component: 'Select',
+    colProps: { span: 8 },
+    componentProps: {
+      allowClear: true,
+      options: [
+        { label: '草稿', value: 0 },
+        { label: '待审核', value: 1 },
+        { label: '已发布', value: 2 },
+        { label: '已下线', value: 3 },
+      ],
+    },
+  },
 ];
 
 export const formSchema: FormSchema[] = [
@@ -25,13 +52,7 @@ export const formSchema: FormSchema[] = [
     label: '商家',
     component: 'ApiSelect',
     required: true,
-    componentProps: {
-      api: getMerchantList,
-      labelField: 'merchantName',
-      valueField: 'id',
-      params: { pageNo: 1, pageSize: 50, status: 1 },
-      pageConfig: { isPage: true, pageField: 'pageNo', pageSizeField: 'pageSize', totalField: 'total', listField: 'records' },
-    },
+    componentProps: merchantSelectProps,
   },
   {
     field: 'questionId',

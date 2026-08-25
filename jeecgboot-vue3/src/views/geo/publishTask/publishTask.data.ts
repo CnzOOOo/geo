@@ -15,7 +15,22 @@ export const columns: BasicColumn[] = [
 
 export const searchFormSchema: FormSchema[] = [
   { label: '文章ID', field: 'articleId', component: 'Input', colProps: { span: 8 } },
-  { label: '状态', field: 'status', component: 'InputNumber', colProps: { span: 8 } },
+  {
+    label: '状态',
+    field: 'status',
+    component: 'Select',
+    colProps: { span: 8 },
+    componentProps: {
+      allowClear: true,
+      options: [
+        { label: '排队中', value: 0 },
+        { label: '发布中', value: 1 },
+        { label: '成功', value: 2 },
+        { label: '失败', value: 3 },
+        { label: '需人工', value: 4 },
+      ],
+    },
+  },
 ];
 
 export const formSchema: FormSchema[] = [

@@ -50,13 +50,13 @@ export const searchFormSchema: FormSchema[] = [
   {
     label: '城市',
     field: 'city',
-    component: 'Input',
+    component: 'AutoComplete',
     colProps: { span: 8 },
   },
   {
     label: '分类',
     field: 'category',
-    component: 'Input',
+    component: 'AutoComplete',
     colProps: { span: 8 },
   },
 ];
@@ -82,22 +82,57 @@ export const formSchema: FormSchema[] = [
   {
     field: 'category',
     label: '分类',
-    component: 'Input',
+    component: 'AutoComplete',
+    componentProps: {
+      allowClear: true,
+      placeholder: '请选择或输入行业类目',
+      options: [
+        { value: '餐饮' },
+        { value: '咖啡店' },
+        { value: '餐厅' },
+        { value: '美容美发' },
+        { value: '健身' },
+        { value: '教育培训' },
+        { value: '医疗服务' },
+        { value: '金融保险' },
+        { value: '家政服务' },
+        { value: '宠物服务' },
+        { value: '酒店住宿' },
+        { value: '汽车服务' },
+        { value: '旅游景点' },
+        { value: '其他' },
+      ],
+    },
   },
   {
     field: 'province',
     label: '省',
-    component: 'Input',
+    component: 'AutoComplete',
+    componentProps: {
+      allowClear: true,
+      placeholder: '请选择省份',
+      options: [],
+    },
   },
   {
     field: 'city',
     label: '市',
-    component: 'Input',
+    component: 'AutoComplete',
+    componentProps: {
+      allowClear: true,
+      placeholder: '请选择城市',
+      options: [],
+    },
   },
   {
     field: 'district',
     label: '区',
-    component: 'Input',
+    component: 'AutoComplete',
+    componentProps: {
+      allowClear: true,
+      placeholder: '请选择区县',
+      options: [],
+    },
   },
   {
     field: 'address',
@@ -132,11 +167,14 @@ export const formSchema: FormSchema[] = [
   {
     field: 'status',
     label: '状态',
-    component: 'InputNumber',
+    component: 'Select',
     defaultValue: 0,
     componentProps: {
-      min: 0,
-      max: 2,
+      options: [
+        { label: '草稿', value: 0 },
+        { label: '启用', value: 1 },
+        { label: '停用', value: 2 },
+      ],
     },
   },
 ];
