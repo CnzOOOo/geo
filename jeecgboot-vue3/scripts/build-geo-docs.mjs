@@ -43,9 +43,9 @@ function firstParagraph(content) {
   return lines[0] || '';
 }
 
-const files = fs
-  .readdirSync(sourceDir)
-  .filter((file) => file.toLowerCase().endsWith('.md'))
+const publicFiles = ['GEO-MENU-GUIDE.md'];
+const files = publicFiles
+  .filter((file) => fs.existsSync(path.join(sourceDir, file)))
   .sort((a, b) => {
     const ai = order.indexOf(a);
     const bi = order.indexOf(b);
