@@ -107,31 +107,30 @@ export const formSchema: FormSchema[] = [
   {
     field: 'province',
     label: '省',
-    component: 'AutoComplete',
-    componentProps: {
-      allowClear: true,
-      placeholder: '请选择省份',
-      options: [],
-    },
+    component: 'Input',
+    show: false,
   },
   {
     field: 'city',
     label: '市',
-    component: 'AutoComplete',
-    componentProps: {
-      allowClear: true,
-      placeholder: '请选择城市',
-      options: [],
-    },
+    component: 'Input',
+    show: false,
   },
   {
     field: 'district',
     label: '区',
-    component: 'AutoComplete',
+    component: 'Input',
+    show: false,
+  },
+  {
+    field: 'areaLinkage',
+    label: '省市区',
+    component: 'Input',
+    slot: 'areaLinkage',
+    required: true,
+    rules: [{ required: true, message: '请选择省市区' }],
     componentProps: {
-      allowClear: true,
-      placeholder: '请选择区县',
-      options: [],
+      placeholder: '请选择省市区',
     },
   },
   {

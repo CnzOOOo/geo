@@ -1,6 +1,17 @@
 <template>
   <BasicModal v-bind="$attrs" @register="registerModal" :title="title" @ok="handleSubmit" width="720px">
-    <BasicForm @register="registerForm" />
+    <BasicForm @register="registerForm">
+      <template #areaLinkage="{ model }">
+        <a-cascader
+          :options="areaOptions"
+          :value="getAreaValue(model)"
+          :showSearch="true"
+          allowClear
+          placeholder="请选择省市区"
+          @change="handleAreaChange(model, $event)"
+        />
+      </template>
+    </BasicForm>
   </BasicModal>
 </template>
 
@@ -29,30 +40,44 @@
       data.record = await getMerchantById({ id: data.record.id });
       await setFieldsValue({
         ...data.record,
+        areaLinkage: [data.record.province, data.record.city, data.record.district].filter(Boolean).join('/'),
       });
     }
   });
 
   const title = computed(() => (!unref(isUpdate) ? '新增商家' : '编辑商家'));
 
-  function collectAreaLabels(nodes: any[], level: number): string[] {
-    const labels: string[] = [];
-    const walk = (list: any[], currentLevel: number) => {
-      if (!Array.isArray(list)) return;
-      list.forEach((item) => {
-        if (currentLevel === 0) labels.push(item.label);
-        if (currentLevel > 0 && Array.isArray(item.children)) walk(item.children, currentLevel - 1);
-      });
-    };
-    walk(nodes, level);
-    return Array.from(new Set(labels));
+  function buildAreaOptions() {
+    return regionData.map((province: any) => ({
+      label: province.label,
+      value: province.label,
+      children: (province.children || []).map((city: any) => ({
+        label: city.label,
+        value: city.label,
+        children: (city.children || []).map((district: any) => ({
+          label: district.label,
+          value: district.label,
+        })),
+      })),
+    }));
+  }
+
+  const areaOptions = buildAreaOptions();
+
+  function getAreaValue(model: any) {
+    return [model.province, model.city, model.district].filter(Boolean);
+  }
+
+  function handleAreaChange(model: any, value: string[]) {
+    const area = Array.isArray(value) ? value : [];
+    model.province = area[0] || '';
+    model.city = area[1] || '';
+    model.district = area[2] || '';
+    model.areaLinkage = area.join('/');
   }
 
   async function loadFormOptions() {
     const categoryFallback = ['餐饮', '咖啡店', '餐厅', '美容美发', '健身', '教育培训', '医疗服务', '金融保险', '家政服务', '宠物服务', '酒店住宿', '汽车服务', '旅游景点', '其他'];
-    const provinceFallback = collectAreaLabels(regionData, 0);
-    const cityFallback = collectAreaLabels(regionData, 1);
-    const districtFallback = collectAreaLabels(regionData, 2);
 
     let existingMerchants: any[] = [];
     try {
@@ -71,15 +96,17 @@
 
     await updateSchema([
       { field: 'category', componentProps: { options: mergeOptions('category', categoryFallback) } },
-      { field: 'province', componentProps: { options: mergeOptions('province', provinceFallback) } },
-      { field: 'city', componentProps: { options: mergeOptions('city', cityFallback) } },
-      { field: 'district', componentProps: { options: mergeOptions('district', districtFallback) } },
     ]);
   }
 
   async function handleSubmit() {
     try {
       const values = await validate();
+      const area = values.areaLinkage ? String(values.areaLinkage).split('/').filter(Boolean) : [];
+      values.province = area[0] || '';
+      values.city = area[1] || '';
+      values.district = area[2] || '';
+      delete values.areaLinkage;
       setModalProps({ confirmLoading: true });
       await saveOrUpdateMerchant(values, isUpdate.value);
       closeModal();
