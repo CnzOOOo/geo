@@ -113,6 +113,21 @@
         </a-col>
       </a-row>
 
+      <a-card size="small" title="本地 MCP 服务" class="mt-4">
+        <a-space wrap class="mb-2">
+          <a-button :loading="localMcpChecking" @click="checkLocalMcp">检测本地服务</a-button>
+          <a-button @click="copyInstallCommand">复制安装命令</a-button>
+          <a-button @click="copyStartCommand">复制启动命令</a-button>
+          <a-button @click="downloadMcpScript">下载一键启动脚本</a-button>
+        </a-space>
+        <a-alert
+          :type="localMcpConnected ? 'success' : 'warning'"
+          show-icon
+          :message="localMcpMessage"
+        />
+        <pre v-if="localMcpOutput" class="mt-2 mb-0">{{ localMcpOutput }}</pre>
+      </a-card>
+
       <a-card v-if="platformOutput" size="small" title="检查输出" class="mt-4">
         <pre class="mb-0">{{ platformOutput }}</pre>
       </a-card>
@@ -131,6 +146,7 @@
     getWechatsyncPluginInfo,
     getWechatsyncPlatformStatus,
   } from './wechatsync.api';
+  import { checkLocalWechatsync } from './localWechatsync';
 
   const { createMessage } = useMessage();
   const status = ref<any>({});
@@ -140,6 +156,10 @@
   const updateCheckLoading = ref(false);
   const updateLoading = ref(false);
   const platformLoading = ref(false);
+  const localMcpChecking = ref(false);
+  const localMcpConnected = ref(false);
+  const localMcpMessage = ref('尚未检测本地 MCP 服务');
+  const localMcpOutput = ref('');
   const pluginInfo = ref<any>({});
   const extensionPageUrl = 'chrome-extension://hchobocdmclopcbnibdnoafilagadion/src/popup/index.html';
 
@@ -150,6 +170,14 @@
   const bridgeConnected = computed(() => {
     return /Chrome Extension 已连接|已连接/.test(platformOutput.value);
   });
+  const mcpInstallCommand = `git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
+cd /d "%USERPROFILE%\\Wechatsync"
+corepack pnpm install
+corepack pnpm --filter @wechatsync/mcp-server build`;
+  const mcpStartCommand = `$env:WECHATSYNC_TOKEN="扩展Token"
+$env:SYNC_WS_PORT="9527"
+$env:SYNC_HTTP_PORT="9529"
+node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`;
 
   async function loadStatus() {
     statusLoading.value = true;
@@ -204,6 +232,74 @@
     } finally {
       platformLoading.value = false;
     }
+  }
+
+  async function checkLocalMcp() {
+    localMcpChecking.value = true;
+    try {
+      const wsPort = status.value.wsPort || 9527;
+      const res = await checkLocalWechatsync(wsPort);
+      localMcpConnected.value = !!res.connected;
+      localMcpMessage.value = localMcpConnected.value
+        ? '本地 MCP 服务已连接，Chrome 扩展可发布'
+        : '本地 MCP 服务可达，但 Chrome 扩展未连接';
+      localMcpOutput.value = JSON.stringify(res, null, 2);
+    } catch (e: any) {
+      localMcpConnected.value = false;
+      localMcpMessage.value = '本地 MCP 服务未启动，请下载一键启动脚本或复制命令';
+      localMcpOutput.value = e?.message || '无法连接本地服务';
+    } finally {
+      localMcpChecking.value = false;
+    }
+  }
+
+  function copyInstallCommand() {
+    navigator.clipboard
+      .writeText(mcpInstallCommand)
+      .then(() => createMessage.success('MCP 安装命令已复制'))
+      .catch(() => createMessage.error('复制失败，请手动复制'));
+  }
+
+  function copyStartCommand() {
+    navigator.clipboard
+      .writeText(mcpStartCommand)
+      .then(() => createMessage.success('MCP 启动命令已复制'))
+      .catch(() => createMessage.error('复制失败，请手动复制'));
+  }
+
+  function downloadMcpScript() {
+    const content = `@echo off
+setlocal
+where node >nul 2>nul
+if errorlevel 1 (
+  echo Node.js is required. Please install Node.js first.
+  pause
+  exit /b 1
+)
+if not exist "%USERPROFILE%\\Wechatsync" (
+  git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
+)
+cd /d "%USERPROFILE%\\Wechatsync"
+if not exist node_modules (
+  corepack pnpm install
+)
+if not exist packages\\mcp-server\\dist\\index.js (
+  corepack pnpm --filter @wechatsync/mcp-server build
+)
+set WECHATSYNC_TOKEN=PASTE_TOKEN_HERE
+set SYNC_WS_PORT=9527
+set SYNC_HTTP_PORT=9529
+echo Starting Wechatsync MCP...
+node packages\\mcp-server\\dist\\index.js --sse
+pause`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'start-wechatsync-mcp.cmd';
+    link.click();
+    URL.revokeObjectURL(url);
+    createMessage.success('一键启动脚本已下载');
   }
 
   function openChromeWebStore() {

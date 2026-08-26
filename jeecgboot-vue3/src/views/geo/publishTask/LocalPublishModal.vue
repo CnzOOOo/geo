@@ -20,6 +20,9 @@
         <a-button type="primary" :loading="publishing" :disabled="!localConnected" @click="handlePublish">本地发布</a-button>
         <a-button @click="handleDownload">下载文章文件</a-button>
         <a-button @click="handleCopyCommand">复制本地命令</a-button>
+        <a-popconfirm title="确认已在本地成功发布？" @confirm="handleMarkManualSuccess">
+          <a-button>标记为已手动发布</a-button>
+        </a-popconfirm>
       </a-space>
     </div>
 
@@ -145,6 +148,27 @@
       .writeText(command)
       .then(() => createMessage.success('本地发布命令已复制'))
       .catch(() => createMessage.error('复制失败，请手动复制'));
+  }
+
+  async function handleMarkManualSuccess() {
+    if (!record.value) return;
+    try {
+      await saveOrUpdatePublishTask(
+        {
+          ...record.value,
+          status: 2,
+          externalId: record.value.externalId,
+          externalUrl: record.value.externalUrl,
+          errorCode: null,
+          errorMsg: null,
+        },
+        true
+      );
+      createMessage.success('已标记为手动发布成功');
+      emit('success');
+    } catch (e: any) {
+      createMessage.error(e?.message || '标记失败');
+    }
   }
 
   const statusMeta = {
