@@ -5,9 +5,9 @@ import { getQuestionList } from '../questionBank/questionBank.api';
 
 export const columns: BasicColumn[] = [
   { title: '标题', dataIndex: 'title', width: 300, align: 'left' },
-  { title: '标题类型', dataIndex: 'titleType', width: 110 },
-  { title: '状态', dataIndex: 'status', width: 80 },
-  { title: '审核状态', dataIndex: 'reviewStatus', width: 100 },
+  { title: '标题类型', dataIndex: 'titleType', width: 110, slots: { customRender: 'titleType' } },
+  { title: '状态', dataIndex: 'status', width: 90, slots: { customRender: 'status' } },
+  { title: '审核状态', dataIndex: 'reviewStatus', width: 100, slots: { customRender: 'reviewStatus' } },
   { title: '发布时间', dataIndex: 'publishedAt', width: 160 },
   { title: '规范链接', dataIndex: 'canonicalUrl', width: 260 },
 ];

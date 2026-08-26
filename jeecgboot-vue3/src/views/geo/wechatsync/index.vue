@@ -291,6 +291,21 @@ if not exist "%USERPROFILE%\\Wechatsync" (
   git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
 )
 cd /d "%USERPROFILE%\\Wechatsync"
+if not exist packages\\mcp-server\\src\\ws-bridge.ts.patched (
+  curl -fsSL -o "%TEMP%\\wechatsync-mcp-heartbeat.patch" https://front.rucode.cn/patches/wechatsync-mcp-heartbeat.patch
+  if errorlevel 1 (
+    echo Patch download failed. Please check network.
+    pause
+    exit /b 1
+  )
+  git apply "%TEMP%\\wechatsync-mcp-heartbeat.patch"
+  if errorlevel 1 (
+    echo Patch apply failed. The source may already include the heartbeat fix.
+    pause
+    exit /b 1
+  )
+  echo patched> packages\\mcp-server\\src\\ws-bridge.ts.patched
+)
 if not exist node_modules (
   corepack pnpm install
 )
