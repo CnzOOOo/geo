@@ -114,6 +114,13 @@
       </a-row>
 
       <a-card size="small" title="本地 MCP 服务" class="mt-4">
+        <a-input
+          v-model:value="localMcpToken"
+          placeholder="扩展 Token，从扩展设置复制"
+          style="max-width: 420px"
+          class="mb-2"
+          allowClear
+        />
         <a-space wrap class="mb-2">
           <a-button :loading="localMcpChecking" @click="checkLocalMcp">检测本地服务</a-button>
           <a-button @click="copyInstallCommand">复制安装命令</a-button>
@@ -160,6 +167,7 @@
   const localMcpConnected = ref(false);
   const localMcpMessage = ref('尚未检测本地 MCP 服务');
   const localMcpOutput = ref('');
+  const localMcpToken = ref('');
   const pluginInfo = ref<any>({});
   const extensionPageUrl = 'chrome-extension://hchobocdmclopcbnibdnoafilagadion/src/popup/index.html';
 
@@ -174,10 +182,13 @@
 cd /d "%USERPROFILE%\\Wechatsync"
 corepack pnpm install
 corepack pnpm --filter @wechatsync/mcp-server build`;
-  const mcpStartCommand = `$env:WECHATSYNC_TOKEN="扩展Token"
+  const mcpStartCommand = computed(() => {
+    const token = localMcpToken.value || '扩展Token';
+    return `$env:WECHATSYNC_TOKEN="${token}"
 $env:SYNC_WS_PORT="9527"
 $env:SYNC_HTTP_PORT="9529"
 node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`;
+  });
 
   async function loadStatus() {
     statusLoading.value = true;
@@ -286,7 +297,10 @@ if not exist node_modules (
 if not exist packages\\mcp-server\\dist\\index.js (
   corepack pnpm --filter @wechatsync/mcp-server build
 )
-set WECHATSYNC_TOKEN=PASTE_TOKEN_HERE
+set WECHATSYNC_TOKEN=${localMcpToken.value || 'PASTE_TOKEN_HERE'}
+if "%WECHATSYNC_TOKEN%"=="PASTE_TOKEN_HERE" (
+  set /p WECHATSYNC_TOKEN=Please enter extension Token:
+)
 set SYNC_WS_PORT=9527
 set SYNC_HTTP_PORT=9529
 echo Starting Wechatsync MCP...
@@ -333,4 +347,7 @@ pause`;
 
   loadStatus();
   loadPluginInfo();
+  setTimeout(() => {
+    checkLocalMcp();
+  }, 300);
 </script>
