@@ -50,7 +50,10 @@
   async function handleSubmit() {
     try {
       const values = await validate();
-      const channelIds = Array.isArray(values.channelIds) ? values.channelIds : [];
+      const rawChannelIds = values.channelIds == null ? [] : Array.isArray(values.channelIds) ? values.channelIds : [values.channelIds];
+      const channelIds = rawChannelIds
+        .map((item) => (item && typeof item === 'object' ? item.value : item))
+        .filter(Boolean);
       if (channelIds.length === 0) {
         createMessage.warning('请至少选择一个发布渠道');
         return;
