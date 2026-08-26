@@ -7,11 +7,13 @@
 <script lang="ts" setup>
   import { BasicModal, useModalInner } from '/@/components/Modal';
   import { BasicForm, useForm } from '/@/components/Form/index';
+  import { useMessage } from '/@/hooks/web/useMessage';
   import { formSchema } from './publishWizard.data';
   import { getChannelList } from '../channel/channel.api';
   import { createPublishTask, createAndExecutePublishTask } from '../publishTask/publishTask.api';
 
   const emit = defineEmits(['register', 'success']);
+  const { createMessage } = useMessage();
 
   const [registerForm, { resetFields, setFieldsValue, validate, updateSchema }] = useForm({
     schemas: formSchema,
@@ -48,9 +50,14 @@
   async function handleSubmit() {
     try {
       const values = await validate();
+      const channelIds = Array.isArray(values.channelIds) ? values.channelIds : [];
+      if (channelIds.length === 0) {
+        createMessage.warning('请至少选择一个发布渠道');
+        return;
+      }
       setModalProps({ confirmLoading: true });
       const results = [];
-      for (const channelId of values.channelIds) {
+      for (const channelId of channelIds) {
         if (values.immediateExecute) {
           results.push(await createAndExecutePublishTask({ articleId: values.articleId, channelId, status: 0 }));
         } else {
@@ -59,6 +66,8 @@
       }
       closeModal();
       emit('success', { count: results.length });
+    } catch (e: any) {
+      createMessage.error(e?.message || e?.response?.data?.message || '发布失败，请检查渠道配置和后端日志');
     } finally {
       setModalProps({ confirmLoading: false });
     }

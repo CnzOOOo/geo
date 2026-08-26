@@ -20,13 +20,13 @@ export const saveOrUpdateArticle = (params, isUpdate) => {
 };
 export const getArticleById = (params) => defHttp.get({ url: Api.queryById, params });
 export const submitReviewArticle = (params, handleSuccess) => {
-  return defHttp.post({ url: Api.submitReview, params }).then(() => handleSuccess());
+  return defHttp.post({ url: Api.submitReview, params }, { joinParamsToUrl: true }).then(() => handleSuccess());
 };
 export const publishArticle = (params, handleSuccess) => {
-  return defHttp.post({ url: Api.publish, params }).then(() => handleSuccess());
+  return defHttp.post({ url: Api.publish, params }, { joinParamsToUrl: true }).then(() => handleSuccess());
 };
 export const offlineArticle = (params, handleSuccess) => {
-  return defHttp.post({ url: Api.offline, params }).then(() => handleSuccess());
+  return defHttp.post({ url: Api.offline, params }, { joinParamsToUrl: true }).then(() => handleSuccess());
 };
 export const deleteArticle = (params, handleSuccess) => {
   return defHttp.delete({ url: Api.deleteArticle, params }, { joinParamsToUrl: true }).then(() => handleSuccess());
