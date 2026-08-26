@@ -282,28 +282,26 @@ node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`
     const content = `@echo off
 setlocal
 where node >nul 2>nul
+if not errorlevel 1 goto node_ready
+echo Node.js not found. Installing Node.js LTS...
+where winget >nul 2>nul
+if errorlevel 1 goto node_direct
+winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+goto node_check
+
+:node_direct
+echo winget not found. Downloading Node.js LTS directly...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $d=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($d | Where-Object lts | Select-Object -First 1).version; $u='https://nodejs.org/dist/'+$v+'/node-'+$v+'-x64.msi'; $o=$env:TEMP+'\node-setup.msi'; Invoke-WebRequest $u -OutFile $o; Start-Process msiexec -ArgumentList '/i', $o, '/qn' -Wait; Remove-Item $o -Force; exit 0 } catch { Write-Host $_; exit 1 }"
+
+:node_check
+set "PATH=%PATH%;%ProgramFiles%\nodejs"
+where node >nul 2>nul
 if errorlevel 1 (
-  echo Node.js not found. Installing Node.js LTS via winget...
-  where winget >nul 2>nul
-  if errorlevel 1 (
-    echo winget not found. Downloading Node.js LTS directly...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $d=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($d | Where-Object lts | Select-Object -First 1).version; $u='https://nodejs.org/dist/'+$v+'/node-'+$v+'-x64.msi'; $o=$env:TEMP+'\node-setup.msi'; Invoke-WebRequest $u -OutFile $o; Start-Process msiexec -ArgumentList '/i', $o, '/qn' -Wait; Remove-Item $o -Force; exit 0 } catch { Write-Host $_; exit 1 }"
-    if errorlevel 1 (
-      echo Node.js download or install failed. Please install Node.js from https://nodejs.org manually.
-      pause
-      exit /b 1
-    )
-    set "PATH=%PATH%;%ProgramFiles%\nodejs"
-  )
-  winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
-  set "PATH=%PATH%;%ProgramFiles%\nodejs"
-  where node >nul 2>nul
-  if errorlevel 1 (
-    echo Node.js install failed. Please install Node.js from https://nodejs.org manually.
-    pause
-    exit /b 1
-  )
+  echo Node.js install failed. Please install Node.js from https://nodejs.org manually.
+  pause
+  exit /b 1
 )
+:node_ready
 where corepack >nul 2>nul
 if errorlevel 1 (
   echo corepack not found. Installing corepack via npm...
