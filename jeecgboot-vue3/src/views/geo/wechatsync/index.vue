@@ -291,10 +291,10 @@ goto node_check
 
 :node_direct
 echo winget not found. Downloading Node.js LTS directly...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $d=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($d | Where-Object lts | Select-Object -First 1).version; $u='https://nodejs.org/dist/'+$v+'/node-'+$v+'-x64.msi'; $o=$env:TEMP+'\node-setup.msi'; Invoke-WebRequest $u -OutFile $o; Start-Process msiexec -ArgumentList '/i', $o, '/qn' -Wait; Remove-Item $o -Force; exit 0 } catch { Write-Host $_; exit 1 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $d=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($d | Where-Object { $_.lts } | Select-Object -First 1).version; $u='https://nodejs.org/dist/'+$v+'/node-'+$v+'-x64.msi'; $o=$env:TEMP+'\node-setup.msi'; Invoke-WebRequest $u -OutFile $o; Start-Process msiexec -ArgumentList '/i', $o, '/qn' -Wait; Remove-Item $o -Force; exit 0 } catch { Write-Host $_; exit 1 }"
 
 :node_check
-set "PATH=%PATH%;%ProgramFiles%\nodejs"
+set "PATH=%LOCALAPPDATA%\Programs\nodejs;%ProgramFiles%\nodejs;%ProgramFiles(x86)%\nodejs;%PATH%"
 where node >nul 2>nul
 if errorlevel 1 (
   echo Node.js install failed. Please install Node.js from https://nodejs.org manually.
