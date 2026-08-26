@@ -281,8 +281,19 @@ node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`
   function downloadMcpScript() {
     const content = `@echo off
 setlocal
+set "NODE_DIR="
 where node >nul 2>nul
-if not errorlevel 1 goto node_ready
+if errorlevel 1 goto node_missing
+for /f "delims=" %%i in ('where node') do set "NODE_DIR=%%~dpi"
+set "NODE_DIR=%NODE_DIR:~0,-1%"
+goto node_ready
+
+:node_missing
+if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "NODE_DIR=%LOCALAPPDATA%\Programs\nodejs"
+if exist "%ProgramFiles%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles%\nodejs"
+if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles(x86)%\nodejs"
+if exist "E:\soft\nodejs\node.exe" set "NODE_DIR=E:\soft\nodejs"
+if defined NODE_DIR goto node_ready
 echo Node.js not found. Installing Node.js LTS...
 where winget >nul 2>nul
 if errorlevel 1 goto node_direct
@@ -294,18 +305,21 @@ echo winget not found. Downloading Node.js LTS directly...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $d=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($d | Where-Object { $_.lts } | Select-Object -First 1).version; $u='https://nodejs.org/dist/'+$v+'/node-'+$v+'-x64.msi'; $o=$env:TEMP+'\node-setup.msi'; Invoke-WebRequest $u -OutFile $o; Start-Process msiexec -ArgumentList '/i', $o, '/qn' -Wait; Remove-Item $o -Force; exit 0 } catch { Write-Host $_; exit 1 }"
 
 :node_check
-set "PATH=%LOCALAPPDATA%\Programs\nodejs;%ProgramFiles%\nodejs;%ProgramFiles(x86)%\nodejs;%PATH%"
-where node >nul 2>nul
-if errorlevel 1 (
+if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "NODE_DIR=%LOCALAPPDATA%\Programs\nodejs"
+if exist "%ProgramFiles%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles%\nodejs"
+if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles(x86)%\nodejs"
+if exist "E:\soft\nodejs\node.exe" set "NODE_DIR=E:\soft\nodejs"
+if not defined NODE_DIR (
   echo Node.js install failed. Please install Node.js from https://nodejs.org manually.
   pause
   exit /b 1
 )
 :node_ready
+set "PATH=%NODE_DIR%;%APPDATA%\npm;%PATH%"
 where corepack >nul 2>nul
 if errorlevel 1 (
   echo corepack not found. Installing corepack via npm...
-  call npm install -g corepack
+  call "%NODE_DIR%\npm.cmd" install -g corepack
 )
 if not exist "%USERPROFILE%\\Wechatsync" (
   git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
