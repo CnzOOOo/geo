@@ -1,5 +1,4 @@
 import { FormSchema } from '/@/components/Table';
-import { getChannelList } from '../channel/channel.api';
 
 export const formSchema: FormSchema[] = [
   {
@@ -17,15 +16,14 @@ export const formSchema: FormSchema[] = [
   {
     field: 'channelIds',
     label: '发布渠道',
-    component: 'ApiSelect',
+    component: 'Select',
     required: true,
     componentProps: {
-      api: getChannelList,
       mode: 'multiple',
-      labelField: 'channelName',
-      valueField: 'id',
-      params: { pageNo: 1, pageSize: 100, enabled: 1, status: 1 },
-      pageConfig: { isPage: true, pageField: 'pageNo', pageSizeField: 'pageSize', totalField: 'total', listField: 'records' },
+      options: [],
+      showSearch: true,
+      optionFilterProp: 'label',
+      placeholder: '请选择发布渠道',
     },
   },
   {

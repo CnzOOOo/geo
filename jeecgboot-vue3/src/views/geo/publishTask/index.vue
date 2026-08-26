@@ -5,6 +5,24 @@
         <a-button type="primary" preIcon="ant-design:plus-outlined" @click="handleAdd">新增</a-button>
         <a-button v-if="selectedRowKeys.length > 0" type="primary" danger preIcon="ant-design:delete-outlined" @click="batchHandleDelete">批量删除</a-button>
       </template>
+      <template #articleId="{ record }">
+        <span>{{ articleMap[record.articleId]?.title || `${record.articleId}（已删除）` }}</span>
+      </template>
+      <template #channelId="{ record }">
+        <span>{{ channelMap[record.channelId]?.channelName || `${record.channelId}（已删除）` }}</span>
+      </template>
+      <template #status="{ record }">
+        <a-tag :color="statusMeta[record.status]?.color || 'default'">{{ statusMeta[record.status]?.label || record.status }}</a-tag>
+      </template>
+      <template #externalUrl="{ record }">
+        <a
+          v-if="record.externalUrl"
+          :href="record.externalUrl"
+          target="_blank"
+          rel="noopener"
+        >{{ record.externalUrl }}</a>
+        <span v-else>-</span>
+      </template>
       <template #action="{ record }">
         <TableAction :actions="getActions(record)" />
       </template>
@@ -14,15 +32,26 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { onMounted, ref } from 'vue';
   import { BasicTable, useTable, TableAction } from '/@/components/Table';
   import { useModal } from '/@/components/Modal';
   import PublishTaskModal from './PublishTaskModal.vue';
   import { columns, searchFormSchema } from './publishTask.data';
   import { getPublishTaskList, deletePublishTask, batchDeletePublishTask, executePublishTask } from './publishTask.api';
+  import { getArticleList } from '../article/article.api';
+  import { getChannelList } from '../channel/channel.api';
 
   const selectedRowKeys = ref<Array<string | number>>([]);
   const [registerModal, { openModal }] = useModal();
+  const articleMap = ref<Record<string, any>>({});
+  const channelMap = ref<Record<string, any>>({});
+  const statusMeta = {
+    0: { label: '排队中', color: 'default' },
+    1: { label: '发布中', color: 'processing' },
+    2: { label: '成功', color: 'success' },
+    3: { label: '失败', color: 'error' },
+    4: { label: '需人工', color: 'warning' },
+  };
   const [registerTable, { reload }] = useTable({
     title: 'GEO 发布任务',
     api: getPublishTaskList,
@@ -51,4 +80,20 @@
       reload();
     });
   }
+
+  async function loadReferenceData() {
+    try {
+      const [articleResult, channelResult]: any[] = await Promise.all([
+        getArticleList({ pageNo: 1, pageSize: 1000 }),
+        getChannelList({ pageNo: 1, pageSize: 1000 }),
+      ]);
+      articleMap.value = Object.fromEntries((articleResult?.records || []).map((item) => [item.id, item]));
+      channelMap.value = Object.fromEntries((channelResult?.records || []).map((item) => [item.id, item]));
+    } catch (e) {
+      articleMap.value = {};
+      channelMap.value = {};
+    }
+  }
+
+  onMounted(loadReferenceData);
 </script>

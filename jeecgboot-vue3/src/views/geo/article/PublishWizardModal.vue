@@ -8,17 +8,19 @@
   import { BasicModal, useModalInner } from '/@/components/Modal';
   import { BasicForm, useForm } from '/@/components/Form/index';
   import { formSchema } from './publishWizard.data';
+  import { getChannelList } from '../channel/channel.api';
   import { createPublishTask, createAndExecutePublishTask } from '../publishTask/publishTask.api';
 
   const emit = defineEmits(['register', 'success']);
 
-  const [registerForm, { resetFields, setFieldsValue, validate }] = useForm({
+  const [registerForm, { resetFields, setFieldsValue, validate, updateSchema }] = useForm({
     schemas: formSchema,
     showActionButtonGroup: false,
   });
 
   const [registerModal, { setModalProps, closeModal }] = useModalInner(async (data) => {
     await resetFields();
+    await loadChannelOptions();
     setModalProps({ confirmLoading: false, showOkBtn: true });
     if (data?.record) {
       await setFieldsValue({
@@ -29,6 +31,19 @@
       });
     }
   });
+
+  async function loadChannelOptions() {
+    try {
+      const result: any = await getChannelList({ pageNo: 1, pageSize: 500, enabled: 1, status: 1 });
+      const options = (result?.records || []).map((item) => ({
+        label: `${item.channelName}（${item.platform}）`,
+        value: item.id,
+      }));
+      await updateSchema([{ field: 'channelIds', componentProps: { options } }]);
+    } catch (e) {
+      await updateSchema([{ field: 'channelIds', componentProps: { options: [] } }]);
+    }
+  }
 
   async function handleSubmit() {
     try {

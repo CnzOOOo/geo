@@ -1,14 +1,14 @@
 import { BasicColumn } from '/@/components/Table';
 import { FormSchema } from '/@/components/Table';
-import { getArticleList } from '../article/article.api';
-import { getChannelList } from '../channel/channel.api';
 
 export const columns: BasicColumn[] = [
-  { title: '文章ID', dataIndex: 'articleId', width: 220 },
-  { title: '渠道ID', dataIndex: 'channelId', width: 220 },
-  { title: '状态', dataIndex: 'status', width: 80 },
+  { title: '文章', dataIndex: 'articleId', width: 240, slots: { customRender: 'articleId' } },
+  { title: '渠道', dataIndex: 'channelId', width: 180, slots: { customRender: 'channelId' } },
+  { title: '状态', dataIndex: 'status', width: 100, slots: { customRender: 'status' } },
   { title: '外部ID', dataIndex: 'externalId', width: 180 },
-  { title: '外部链接', dataIndex: 'externalUrl', width: 240 },
+  { title: '外部链接', dataIndex: 'externalUrl', width: 240, slots: { customRender: 'externalUrl' } },
+  { title: '错误码', dataIndex: 'errorCode', width: 130 },
+  { title: '错误信息', dataIndex: 'errorMsg', width: 220 },
   { title: '重试次数', dataIndex: 'retryCount', width: 90 },
   { title: '发布时间', dataIndex: 'publishedAt', width: 160 },
 ];
@@ -38,27 +38,25 @@ export const formSchema: FormSchema[] = [
   {
     field: 'articleId',
     label: '文章',
-    component: 'ApiSelect',
+    component: 'Select',
     required: true,
     componentProps: {
-      api: getArticleList,
-      labelField: 'title',
-      valueField: 'id',
-      params: { pageNo: 1, pageSize: 50, status: 2 },
-      pageConfig: { isPage: true, pageField: 'pageNo', pageSizeField: 'pageSize', totalField: 'total', listField: 'records' },
+      options: [],
+      showSearch: true,
+      optionFilterProp: 'label',
+      placeholder: '请选择文章',
     },
   },
   {
     field: 'channelId',
     label: '渠道',
-    component: 'ApiSelect',
+    component: 'Select',
     required: true,
     componentProps: {
-      api: getChannelList,
-      labelField: 'channelName',
-      valueField: 'id',
-      params: { pageNo: 1, pageSize: 50, enabled: 1, status: 1 },
-      pageConfig: { isPage: true, pageField: 'pageNo', pageSizeField: 'pageSize', totalField: 'total', listField: 'records' },
+      options: [],
+      showSearch: true,
+      optionFilterProp: 'label',
+      placeholder: '请选择渠道',
     },
   },
   {
