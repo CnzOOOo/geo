@@ -80,6 +80,9 @@ public class WechatsyncCliPublishAdapter implements GeoPublishAdapter {
         if (channel.getPlatform() == null || channel.getPlatform().isBlank()) {
             return GeoPublishResult.fail("PLATFORM_MISSING", "platform is empty");
         }
+        if (isServerMode()) {
+            return GeoPublishResult.manual("生产服务器不运行 Wechatsync CLI。请在本机启动 Wechatsync MCP 服务后，在 GEO 发布任务页点击“本地执行”，或运行：wechatsync sync <文章文件> -p " + channel.getPlatform());
+        }
         JSONObject config = parseConfig(channel);
         String cliPath = config.getString("cliPath");
         if (cliPath == null || cliPath.isBlank()) {
@@ -141,6 +144,11 @@ public class WechatsyncCliPublishAdapter implements GeoPublishAdapter {
             return matcher.group();
         }
         return null;
+    }
+
+    private boolean isServerMode() {
+        String mode = System.getenv("GEO_WECHATSYNC_DEPLOYMENT_MODE");
+        return mode != null && "server".equalsIgnoreCase(mode.trim());
     }
 
     private JSONObject parseConfig(GeoChannel channel) {

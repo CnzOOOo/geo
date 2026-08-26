@@ -28,6 +28,7 @@
       </template>
     </BasicTable>
     <PublishTaskModal @register="registerModal" @success="reload" />
+    <LocalPublishModal @register="registerLocalModal" @success="reload" />
   </div>
 </template>
 
@@ -36,13 +37,15 @@
   import { BasicTable, useTable, TableAction } from '/@/components/Table';
   import { useModal } from '/@/components/Modal';
   import PublishTaskModal from './PublishTaskModal.vue';
+  import LocalPublishModal from './LocalPublishModal.vue';
   import { columns, searchFormSchema } from './publishTask.data';
-  import { getPublishTaskList, deletePublishTask, batchDeletePublishTask, executePublishTask } from './publishTask.api';
+  import { getPublishTaskList, deletePublishTask, batchDeletePublishTask } from './publishTask.api';
   import { getArticleList } from '../article/article.api';
   import { getChannelList } from '../channel/channel.api';
 
   const selectedRowKeys = ref<Array<string | number>>([]);
   const [registerModal, { openModal }] = useModal();
+  const [registerLocalModal, { openModal: openLocalModal }] = useModal();
   const articleMap = ref<Record<string, any>>({});
   const channelMap = ref<Record<string, any>>({});
   const statusMeta = {
@@ -67,12 +70,13 @@
   function getActions(record) {
     return [
       { label: '编辑', onClick: handleEdit.bind(null, record) },
-      { label: '执行', onClick: () => executePublishTask({ id: record.id }, reload) },
+      { label: '本地执行', onClick: handleLocalExecute.bind(null, record) },
       { label: '删除', popConfirm: { title: '是否确认删除？', confirm: handleDelete.bind(null, record) } },
     ];
   }
   function handleAdd() { openModal(true, { isUpdate: false }); }
   function handleEdit(record) { openModal(true, { record, isUpdate: true }); }
+  function handleLocalExecute(record) { openLocalModal(true, { record }); }
   function handleDelete(record) { deletePublishTask({ id: record.id }, reload); }
   function batchHandleDelete() {
     batchDeletePublishTask({ ids: selectedRowKeys.value.join(',') }, () => {

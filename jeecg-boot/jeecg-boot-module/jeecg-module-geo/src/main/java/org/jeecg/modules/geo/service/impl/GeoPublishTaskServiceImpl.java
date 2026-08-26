@@ -70,6 +70,10 @@ public class GeoPublishTaskServiceImpl extends ServiceImpl<GeoPublishTaskMapper,
                 task.setPublishedAt(new Date());
                 task.setErrorCode(null);
                 task.setErrorMsg(null);
+            } else if ("MANUAL_REQUIRED".equals(result.getErrorCode())) {
+                task.setStatus(4);
+                task.setErrorCode(result.getErrorCode());
+                task.setErrorMsg(result.getErrorMsg());
             } else {
                 task.setStatus(3);
                 task.setErrorCode(result.getErrorCode());
