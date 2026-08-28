@@ -263,16 +263,6 @@ if errorlevel 1 (
 for /f "delims=" %%i in ('where node') do set "NODE_DIR=%%~dpi"
 set "NODE_DIR=%NODE_DIR:~0,-1%"
 set "PATH=%NODE_DIR%;%APPDATA%\npm;%PATH%"
-where corepack >nul 2>nul
-if errorlevel 1 (
-  echo corepack not found. Installing corepack via npm...
-  call "%NODE_DIR%\npm.cmd" install -g corepack
-  if errorlevel 1 (
-    echo corepack install failed.
-    pause
-    exit /b 1
-  )
-)
 if not exist "%USERPROFILE%\\Wechatsync" (
   git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
   if errorlevel 1 (
@@ -297,22 +287,24 @@ if not exist packages\\mcp-server\\src\\ws-bridge.ts.patched (
   )
   echo patched> packages\\mcp-server\\src\\ws-bridge.ts.patched
 )
+pushd "%USERPROFILE%\\Wechatsync\\packages\\mcp-server"
 if not exist node_modules (
-  corepack pnpm install
+  call "%NODE_DIR%\npm.cmd" install
   if errorlevel 1 (
-    echo pnpm install failed.
+    echo npm install failed.
     pause
     exit /b 1
   )
 )
-if not exist packages\\mcp-server\\dist\\index.js (
-  corepack pnpm --filter @wechatsync/mcp-server build
+if not exist dist\\index.js (
+  call "%NODE_DIR%\npm.cmd" run build
   if errorlevel 1 (
     echo MCP Server build failed.
     pause
     exit /b 1
   )
 )
+popd
 set WECHATSYNC_TOKEN=${localMcpToken.value || 'PASTE_TOKEN_HERE'}
 if "%WECHATSYNC_TOKEN%"=="PASTE_TOKEN_HERE" (
   set /p WECHATSYNC_TOKEN=Please enter extension Token:
