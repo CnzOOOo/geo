@@ -122,10 +122,8 @@
           allowClear
         />
         <a-space wrap class="mb-2">
-          <a-button :loading="localMcpChecking" @click="checkLocalMcp">检测本地服务</a-button>
-          <a-button @click="copyInstallCommand">复制安装命令</a-button>
-          <a-button @click="copyStartCommand">复制启动命令</a-button>
-          <a-button @click="downloadMcpScript">下载一键启动脚本</a-button>
+          <a-button type="primary" @click="downloadMcpScript">下载启动脚本</a-button>
+          <a-button :loading="localMcpChecking" @click="checkLocalMcp">检测服务</a-button>
         </a-space>
         <a-alert
           :type="localMcpConnected ? 'success' : 'warning'"
@@ -165,7 +163,7 @@
   const platformLoading = ref(false);
   const localMcpChecking = ref(false);
   const localMcpConnected = ref(false);
-  const localMcpMessage = ref('尚未检测本地 MCP 服务');
+  const localMcpMessage = ref('填写扩展 Token，下载启动脚本并运行；启动后点击检测服务');
   const localMcpOutput = ref('');
   const localMcpToken = ref('');
   const pluginInfo = ref<any>({});
@@ -178,18 +176,6 @@
   const bridgeConnected = computed(() => {
     return /Chrome Extension 已连接|已连接/.test(platformOutput.value);
   });
-  const mcpInstallCommand = `git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
-cd /d "%USERPROFILE%\\Wechatsync"
-corepack pnpm install
-corepack pnpm --filter @wechatsync/mcp-server build`;
-  const mcpStartCommand = computed(() => {
-    const token = localMcpToken.value || '扩展Token';
-    return `$env:WECHATSYNC_TOKEN="${token}"
-$env:SYNC_WS_PORT="9527"
-$env:SYNC_HTTP_PORT="9529"
-node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`;
-  });
-
   async function loadStatus() {
     statusLoading.value = true;
     try {
@@ -257,25 +243,11 @@ node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`
       localMcpOutput.value = JSON.stringify(res, null, 2);
     } catch (e: any) {
       localMcpConnected.value = false;
-      localMcpMessage.value = '本地 MCP 服务未启动，请下载一键启动脚本或复制命令';
+      localMcpMessage.value = '本地 MCP 服务未启动，请下载启动脚本并运行';
       localMcpOutput.value = e?.message || '无法连接本地服务';
     } finally {
       localMcpChecking.value = false;
     }
-  }
-
-  function copyInstallCommand() {
-    navigator.clipboard
-      .writeText(mcpInstallCommand)
-      .then(() => createMessage.success('MCP 安装命令已复制'))
-      .catch(() => createMessage.error('复制失败，请手动复制'));
-  }
-
-  function copyStartCommand() {
-    navigator.clipboard
-      .writeText(mcpStartCommand)
-      .then(() => createMessage.success('MCP 启动命令已复制'))
-      .catch(() => createMessage.error('复制失败，请手动复制'));
   }
 
   function downloadMcpScript() {
@@ -283,38 +255,13 @@ node "$env:USERPROFILE\\Wechatsync\\packages\\mcp-server\\dist\\index.js" --sse`
 setlocal
 set "NODE_DIR="
 where node >nul 2>nul
-if errorlevel 1 goto node_missing
-for /f "delims=" %%i in ('where node') do set "NODE_DIR=%%~dpi"
-set "NODE_DIR=%NODE_DIR:~0,-1%"
-goto node_ready
-
-:node_missing
-if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "NODE_DIR=%LOCALAPPDATA%\Programs\nodejs"
-if exist "%ProgramFiles%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles%\nodejs"
-if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles(x86)%\nodejs"
-if exist "E:\soft\nodejs\node.exe" set "NODE_DIR=E:\soft\nodejs"
-if defined NODE_DIR goto node_ready
-echo Node.js not found. Installing Node.js LTS...
-where winget >nul 2>nul
-if errorlevel 1 goto node_direct
-winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
-goto node_check
-
-:node_direct
-echo winget not found. Downloading Node.js LTS directly...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $d=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($d | Where-Object { $_.lts } | Select-Object -First 1).version; $u='https://nodejs.org/dist/'+$v+'/node-'+$v+'-x64.msi'; $o=$env:TEMP+'\node-setup.msi'; Invoke-WebRequest $u -OutFile $o; Start-Process msiexec -ArgumentList '/i', $o, '/qn' -Wait; Remove-Item $o -Force; exit 0 } catch { Write-Host $_; exit 1 }"
-
-:node_check
-if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "NODE_DIR=%LOCALAPPDATA%\Programs\nodejs"
-if exist "%ProgramFiles%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles%\nodejs"
-if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODE_DIR=%ProgramFiles(x86)%\nodejs"
-if exist "E:\soft\nodejs\node.exe" set "NODE_DIR=E:\soft\nodejs"
-if not defined NODE_DIR (
-  echo Node.js install failed. Please install Node.js from https://nodejs.org manually.
+if errorlevel 1 (
+  echo Node.js not found. Please install Node.js from https://nodejs.org
   pause
   exit /b 1
 )
-:node_ready
+for /f "delims=" %%i in ('where node') do set "NODE_DIR=%%~dpi"
+set "NODE_DIR=%NODE_DIR:~0,-1%"
 set "PATH=%NODE_DIR%;%APPDATA%\npm;%PATH%"
 where corepack >nul 2>nul
 if errorlevel 1 (
