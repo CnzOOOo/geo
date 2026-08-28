@@ -320,9 +320,19 @@ where corepack >nul 2>nul
 if errorlevel 1 (
   echo corepack not found. Installing corepack via npm...
   call "%NODE_DIR%\npm.cmd" install -g corepack
+  if errorlevel 1 (
+    echo corepack install failed.
+    pause
+    exit /b 1
+  )
 )
 if not exist "%USERPROFILE%\\Wechatsync" (
   git clone https://github.com/wechatsync/Wechatsync.git "%USERPROFILE%\\Wechatsync"
+  if errorlevel 1 (
+    echo git clone failed.
+    pause
+    exit /b 1
+  )
 )
 cd /d "%USERPROFILE%\\Wechatsync"
 if not exist packages\\mcp-server\\src\\ws-bridge.ts.patched (
@@ -342,9 +352,19 @@ if not exist packages\\mcp-server\\src\\ws-bridge.ts.patched (
 )
 if not exist node_modules (
   corepack pnpm install
+  if errorlevel 1 (
+    echo pnpm install failed.
+    pause
+    exit /b 1
+  )
 )
 if not exist packages\\mcp-server\\dist\\index.js (
   corepack pnpm --filter @wechatsync/mcp-server build
+  if errorlevel 1 (
+    echo MCP Server build failed.
+    pause
+    exit /b 1
+  )
 )
 set WECHATSYNC_TOKEN=${localMcpToken.value || 'PASTE_TOKEN_HERE'}
 if "%WECHATSYNC_TOKEN%"=="PASTE_TOKEN_HERE" (
@@ -354,6 +374,11 @@ set SYNC_WS_PORT=9527
 set SYNC_HTTP_PORT=9529
 echo Starting Wechatsync MCP...
 node packages\\mcp-server\\dist\\index.js --sse
+if errorlevel 1 (
+  echo MCP Server exited with an error.
+  pause
+  exit /b 1
+)
 pause`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
