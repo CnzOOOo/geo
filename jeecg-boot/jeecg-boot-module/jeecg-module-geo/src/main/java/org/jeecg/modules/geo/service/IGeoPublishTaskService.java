@@ -9,4 +9,6 @@ import org.jeecg.modules.geo.entity.GeoPublishTask;
 public interface IGeoPublishTaskService extends JeecgService<GeoPublishTask> {
 
     GeoPublishTask execute(String id);
+
+    boolean updatePublishResult(GeoPublishTask task);
 }

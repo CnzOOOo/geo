@@ -7,6 +7,7 @@ enum Api {
   edit = '/geo/publishTask/edit',
   queryById = '/geo/publishTask/queryById',
   execute = '/geo/publishTask/execute',
+  updateResult = '/geo/publishTask/updateResult',
   createAndExecute = '/geo/publishTask/createAndExecute',
   deleteTask = '/geo/publishTask/delete',
   deleteBatch = '/geo/publishTask/deleteBatch',
@@ -19,6 +20,7 @@ export const saveOrUpdatePublishTask = (params, isUpdate) => {
 };
 export const getPublishTaskById = (params) => defHttp.get({ url: Api.queryById, params });
 export const createPublishTask = (params) => defHttp.post({ url: Api.save, params });
+export const updatePublishTaskResult = (params) => defHttp.post({ url: Api.updateResult, params });
 export const createAndExecutePublishTask = (params) => defHttp.post({ url: Api.createAndExecute, params });
 export const executePublishTask = (params, handleSuccess) => {
   return defHttp.post({ url: Api.execute, params }).then(() => handleSuccess());

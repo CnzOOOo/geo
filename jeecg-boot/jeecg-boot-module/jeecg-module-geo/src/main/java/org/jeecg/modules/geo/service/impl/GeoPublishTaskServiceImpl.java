@@ -16,6 +16,8 @@ import org.jeecg.modules.geo.service.IGeoPublishTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 /**
@@ -49,7 +51,7 @@ public class GeoPublishTaskServiceImpl extends ServiceImpl<GeoPublishTaskMapper,
             task.setStatus(3);
             task.setErrorCode("DATA_MISSING");
             task.setErrorMsg("article or channel not found");
-            updateById(task);
+            updatePublishResult(task);
             return task;
         }
 
@@ -84,7 +86,34 @@ public class GeoPublishTaskServiceImpl extends ServiceImpl<GeoPublishTaskMapper,
             task.setErrorCode("PUBLISH_EXCEPTION");
             task.setErrorMsg(e.getMessage());
         }
-        updateById(task);
+        updatePublishResult(task);
         return task;
+    }
+
+    @Override
+    public boolean updatePublishResult(GeoPublishTask task) {
+        if (task == null || task.getId() == null) {
+            return false;
+        }
+        LambdaUpdateWrapper<GeoPublishTask> updateWrapper = Wrappers.<GeoPublishTask>lambdaUpdate();
+        updateWrapper.eq(GeoPublishTask::getId, task.getId());
+        if (task.getStatus() != null) {
+            updateWrapper.set(GeoPublishTask::getStatus, task.getStatus());
+        }
+        if (task.getExternalId() != null) {
+            updateWrapper.set(GeoPublishTask::getExternalId, task.getExternalId());
+        }
+        if (task.getExternalUrl() != null) {
+            updateWrapper.set(GeoPublishTask::getExternalUrl, task.getExternalUrl());
+        }
+        updateWrapper.set(GeoPublishTask::getErrorCode, task.getErrorCode());
+        updateWrapper.set(GeoPublishTask::getErrorMsg, task.getErrorMsg());
+        if (task.getRetryCount() != null) {
+            updateWrapper.set(GeoPublishTask::getRetryCount, task.getRetryCount());
+        }
+        if (task.getPublishedAt() != null) {
+            updateWrapper.set(GeoPublishTask::getPublishedAt, task.getPublishedAt());
+        }
+        return update(updateWrapper);
     }
 }

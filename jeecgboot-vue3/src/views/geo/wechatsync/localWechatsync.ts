@@ -94,6 +94,12 @@ export function getChannelWsPort(channel?: any): string | number | undefined {
   }
 }
 
+export function formatDateTimeNow(): string {
+  const date = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 export function markdownToHtml(markdown: string): string {
   return String(markdown || '')
     .split(/\r?\n/)

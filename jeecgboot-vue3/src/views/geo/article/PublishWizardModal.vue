@@ -12,8 +12,8 @@
   import { formSchema } from './publishWizard.data';
   import { getArticleById } from './article.api';
   import { getChannelList } from '../channel/channel.api';
-  import { createPublishTask, saveOrUpdatePublishTask } from '../publishTask/publishTask.api';
-  import { getChannelWsPort, publishViaLocalWechatsync } from '../wechatsync/localWechatsync';
+  import { createPublishTask, updatePublishTaskResult } from '../publishTask/publishTask.api';
+  import { formatDateTimeNow, getChannelWsPort, publishViaLocalWechatsync } from '../wechatsync/localWechatsync';
 
   const emit = defineEmits(['register', 'success']);
   const { createMessage } = useMessage();
@@ -95,17 +95,15 @@
             if (sync?.success) {
               successCount += 1;
             }
-            await saveOrUpdatePublishTask(
-              {
-                ...item.task,
-                status: sync?.success ? 2 : 3,
-                externalId: sync?.postId || item.task.externalId,
-                externalUrl: sync?.postUrl || item.task.externalUrl,
-                errorCode: sync?.success ? null : sync?.error ? 'LOCAL_SYNC_FAILED' : item.task.errorCode,
-                errorMsg: sync?.success ? null : sync?.error || item.task.errorMsg,
-              },
-              true
-            );
+            await updatePublishTaskResult({
+              id: item.task.id,
+              status: sync?.success ? 2 : 3,
+              externalId: sync?.postId || item.task.externalId,
+              externalUrl: sync?.postUrl || item.task.externalUrl,
+              errorCode: sync?.success ? null : 'LOCAL_SYNC_FAILED',
+              errorMsg: sync?.success ? null : sync?.error || '本地发布未返回成功结果',
+              publishedAt: sync?.success ? formatDateTimeNow() : item.task.publishedAt,
+            });
           }
           createMessage.success(`本地发布完成：${successCount}/${tasks.length} 个草稿`);
         } catch (e: any) {

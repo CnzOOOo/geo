@@ -77,6 +77,12 @@ public class GeoPublishTaskController {
         }
     }
 
+    @Operation(summary = "Update GEO publish task result")
+    @PostMapping("/updateResult")
+    public Result<?> updateResult(@RequestBody GeoPublishTask geoPublishTask) {
+        return Result.OK(geoPublishTaskService.updatePublishResult(geoPublishTask));
+    }
+
     @Operation(summary = "Edit GEO publish task")
     @PostMapping("/edit")
     public Result<?> edit(@RequestBody GeoPublishTask geoPublishTask) {
